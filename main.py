@@ -18,3 +18,14 @@ response = sqs.receive_message(
     VisibilityTimeout=0,
     WaitTimeSeconds=0
 )
+
+def mint(address, token_type_id):
+    #TODO: Add logic
+    print(f"Minting {token_type_id} tokens to {address}")
+
+def process_message(message):
+    body = json.loads(message['Body'])
+    address = body.get('address')
+    token_type_id = body.get('token_type_id')
+
+    mint(address, token_type_id)
