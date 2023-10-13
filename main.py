@@ -1,13 +1,16 @@
-import boto3
+# import boto3
 import json
 from privatekey import private_key
 from web3 import Web3
 
-sqs = boto3.client('sqs')
+# sqs = boto3.client('sqs')
 
-queue_url = 'SQS_QUEUE_URL'
+# queue_url = 'SQS_QUEUE_URL'
 
 web3 = Web3(Web3.HTTPProvider('https://testnet.aurora.dev'))
+
+while not web3.is_connected():  
+    print(web3.is_connected())
 
 with open("abi.json", 'r') as abi_file:
     contract_abi = json.load(abi_file)
@@ -18,14 +21,29 @@ account_address = '0xE225445094069a2A358aeE252E91603CfAD9DBdc'
 contract = web3.eth.contract(address=contract_address, abi=contract_abi)
 
 def mint(address, token_type_id):
-    function_name = "safe_mint"
-    function_args = []
-    transaction = {
+    function_name = "safeMint"
+    function_args = [address, token_type_id]
+    transaction_params = {
         "from": account_address,
-        "to": contract_address,
-        "gasPrice": web3.eth.gas_price
+        "nonce" : web3.eth.get_transaction_count(account_address),
+        "gasPrice": web3.eth.gas_price,
+        "gas": 200000
     }
+
+    nonce = web3.eth.get_transaction_count(account_address)
+
+    transaction = contract.functions.safeMint(address, 1).build_transaction(transaction_params)
+    signed_txn = web3.eth.account.sign_transaction(transaction, private_key)
     
+    tx_hash = web3.eth.send_raw_transaction(signed_txn.rawTransaction)
+    
+    web3.eth.wait_for_transaction_receipt(tx_hash)
+    
+    tx_receipt = web3.eth.get_transaction_receipt(tx_hash)
+    
+    print(tx_receipt)
+    # print(transaction)
+
 
 
 def process_message(message):
@@ -63,3 +81,5 @@ def handler(event, context):
         'statusCode': 200,
         'body': json.dumps('Messages processed')
     }
+
+mint("0xE225445094069a2A358aeE252E91603CfAD9DBdc", 1)
