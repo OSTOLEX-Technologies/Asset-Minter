@@ -7,6 +7,7 @@ from web3 import Web3
 private_key = os.environ.get("PRIVATE_KEY")
 if private_key is None:
     raise Exception("PRIVATE_KEY environment variable is not set")
+
 # sqs = boto3.client('sqs')
 
 # queue_url = 'SQS_QUEUE_URL'
@@ -19,8 +20,14 @@ while not web3.is_connected():
 with open("abi.json", 'r') as abi_file:
     contract_abi = json.load(abi_file)
 
-contract_address = '0x483809d2Af8f3Aa5794b19547dcc2e76dD8B2075'
-account_address = '0xE225445094069a2A358aeE252E91603CfAD9DBdc'
+contract_address = os.environ.get("CONTRACT_ADDRESS")
+account_address = os.environ.get("ACCOUNT_ADDRESS")
+
+if contract_address is None:
+    raise Exception("CONTRACT_ADDRESS environment variable is not set")
+
+if account_address is None:
+    raise Exception("ACCOUNT_ADDRESS environment variable is not set")
 
 contract = web3.eth.contract(address=contract_address, abi=contract_abi)
 
