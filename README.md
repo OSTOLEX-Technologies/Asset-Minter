@@ -1,1 +1,1 @@
-The environment variable PRIVATE_KEY must be set
+The environment variables PRIVATE_KEY, CONTRACT_ADDRESS and ACCOUNT_ADDRESS must be set
