@@ -31,14 +31,14 @@ if account_address is None:
 
 contract = web3.eth.contract(address=contract_address, abi=contract_abi)
 
-def mint(address, token_type_id):
+def mint(address, token_id):
     function_name = "safeMint"
-    function_args = [address, token_type_id]
+    function_args = [address, token_id]
     transaction_params = {
         "from": account_address,
         "nonce" : web3.eth.get_transaction_count(account_address),
         "gasPrice": web3.eth.gas_price,
-        "gas": 200000
+        "gas": 250000
     }
 
     nonce = web3.eth.get_transaction_count(account_address)
@@ -57,40 +57,11 @@ def mint(address, token_type_id):
 
 
 
-def process_message(message):
-    body = json.loads(message['Body'])
-    address = body.get('address')
-    token_type_id = body.get('token_type_id')
+def lambda_handler(event, context):
+    for record in event['Records']:
+        address_to = record['address_to']
+        token_id = record['token_id']
+        mint(address=address_to, token_id=token_id)
 
-    mint(address, token_type_id)
 
-def handler(event, context):
-    response = sqs.receive_message(
-        QueueUrl=queue_url,
-        AttributeNames=[
-            'SentTimestamp'
-        ],
-        MaxNumberOfMessages=1,
-        MessageAttributeNames=[
-            'All'
-        ],
-        VisibilityTimeout=0,
-        WaitTimeSeconds=0
-    )
-
-    if 'Messages' in response:
-        for message in response['Messages']:
-            process_message(message)
-
-            receipt_handle = message['ReceiptHandle']
-            sqs.delete_message(
-                QueueUrl=queue_url,
-                ReceiptHandle=receipt_handle
-            )
-
-    return {
-        'statusCode': 200,
-        'body': json.dumps('Messages processed')
-    }
-
-mint("0xE225445094069a2A358aeE252E91603CfAD9DBdc", 1)
+# mint("0xE225445094069a2A358aeE252E91603CfAD9DBdc", 1)
