@@ -1,8 +1,12 @@
 # import boto3
+import os
 import json
-from privatekey import private_key
 from web3 import Web3
 
+
+private_key = os.environ.get("PRIVATE_KEY")
+if private_key is None:
+    raise Exception("PRIVATE_KEY environment variable is not set")
 # sqs = boto3.client('sqs')
 
 # queue_url = 'SQS_QUEUE_URL'
