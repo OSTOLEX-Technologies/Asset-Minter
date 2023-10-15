@@ -31,9 +31,9 @@ if account_address is None:
 
 contract = web3.eth.contract(address=contract_address, abi=contract_abi)
 
-def mint(address, token_id):
+def mint(address, token_uri):
     function_name = "safeMint"
-    function_args = [address, token_id]
+    function_args = [address, token_uri]
     transaction_params = {
         "from": account_address,
         "nonce" : web3.eth.get_transaction_count(account_address),
@@ -61,8 +61,8 @@ def lambda_handler(event, context):
     for record in event['Records']:
         attributes = record['messageAttributes']
         address_to = attributes['address_to']['stringValue']
-        token_id = attributes['token_id']['stringValue']
-        mint(address=address_to, token_id=token_id)
+        token_uri = attributes['token_uri']['stringValue']
+        mint(address=address_to, token_uri=token_uri)
 
 
 # mint("0xE225445094069a2A358aeE252E91603CfAD9DBdc", 1)
