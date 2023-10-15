@@ -57,7 +57,7 @@ def mint(address, token_uri):
 
 
 
-def lambda_handler(event, context):
+def lambda_function(event, context):
     for record in event['Records']:
         attributes = record['messageAttributes']
         address_to = attributes['address_to']['stringValue']
