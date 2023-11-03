@@ -2,7 +2,22 @@
 import os
 import json
 from web3 import Web3
+from web3.auto import w3
+from typing import Union
 
+from fastapi import FastAPI
+
+app = FastAPI()
+
+
+@app.get("/")
+def read_root():
+    return {"Hello": "World"}
+
+
+
+def read_item(item_id: int, q: Union[str, None] = None):
+    return {"item_id": item_id, "q": q}
 
 private_key = os.environ.get("PRIVATE_KEY")
 if private_key is None:
@@ -11,8 +26,8 @@ if private_key is None:
 # sqs = boto3.client('sqs')
 
 # queue_url = 'SQS_QUEUE_URL'
-
-web3 = Web3(Web3.HTTPProvider('https://testnet.aurora.dev'))
+rpc_url = os.environ.get("RPC_URL")
+web3 = Web3(Web3.HTTPProvider(rpc_url))
 
 while not web3.is_connected():  
     print(web3.is_connected())
@@ -21,7 +36,7 @@ with open("abi.json", 'r') as abi_file:
     contract_abi = json.load(abi_file)
 
 contract_address = os.environ.get("CONTRACT_ADDRESS")
-account_address = os.environ.get("ACCOUNT_ADDRESS")
+account_address = w3.eth.account.from_key(private_key).address # os.environ.get("ACCOUNT_ADDRESS")
 
 if contract_address is None:
     raise Exception("CONTRACT_ADDRESS environment variable is not set")
@@ -31,9 +46,11 @@ if account_address is None:
 
 contract = web3.eth.contract(address=contract_address, abi=contract_abi)
 
-def mint(address, token_uri):
+@app.get("/mint")
+def mint(address_to: str, token_uri: str):
+    print(address_to, token_uri)
     function_name = "safeMint"
-    function_args = [address, token_uri]
+    function_args = [address_to, token_uri]
     transaction_params = {
         "from": account_address,
         "nonce" : web3.eth.get_transaction_count(account_address),
@@ -43,7 +60,7 @@ def mint(address, token_uri):
 
     nonce = web3.eth.get_transaction_count(account_address)
 
-    transaction = contract.functions.safeMint(address, 1).build_transaction(transaction_params)
+    transaction = contract.functions.safeMint(address_to, token_uri).build_transaction(transaction_params)
     signed_txn = web3.eth.account.sign_transaction(transaction, private_key)
     
     tx_hash = web3.eth.send_raw_transaction(signed_txn.rawTransaction)
